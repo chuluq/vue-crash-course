@@ -1,6 +1,5 @@
 <script setup>
-import jobData from "@/jobs.json";
-import { ref, defineProps } from "vue";
+import { ref, defineProps, onMounted, reactive } from "vue";
 import { RouterLink } from "vue-router";
 import JobListing from "./JobListing.vue";
 
@@ -9,7 +8,22 @@ defineProps({
   showButton: { type: Boolean, default: false },
 });
 
-const jobs = ref(jobData);
+const state = reactive({
+  jobs: [],
+  isLoading: true,
+});
+
+onMounted(async () => {
+  try {
+    const response = await fetch("http://localhost:5000/jobs");
+    const data = await response.json();
+    state.jobs = data;
+  } catch (error) {
+    console.error("error fetching jobs", error);
+  } finally {
+    state.isLoading = false;
+  }
+});
 </script>
 
 <template>
@@ -20,7 +34,7 @@ const jobs = ref(jobData);
       </h2>
       <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
         <JobListing
-          v-for="job in jobs.slice(0, limit || jobs.length)"
+          v-for="job in state.jobs.slice(0, limit || state.jobs.length)"
           :key="job.id"
           :job="job"
         />
